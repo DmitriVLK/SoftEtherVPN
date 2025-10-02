@@ -1,11 +1,6 @@
 # A simple<sup>*</sup> [SoftEther VPN][1] server Docker image
 
-[![Docker Image CI/CD](https://github.com/siomiz/SoftEtherVPN/actions/workflows/dockerimage.yml/badge.svg)](https://github.com/siomiz/SoftEtherVPN/actions/workflows/dockerimage.yml)
-
 <sup>*</sup> "Simple" as in no configuration parameter is needed for a single-user SecureNAT setup.
-
-| :warning: **Notice** `:latest` image is now based on `alpine`. [CentOS (`centos`) image is deprecated](https://hub.docker.com/_/centos). |
-| ---- |
 
 ## Image Tags
 
