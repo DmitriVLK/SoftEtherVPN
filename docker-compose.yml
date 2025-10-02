@@ -3,7 +3,7 @@ services:
     build: .
     container_name: softethervpn-server
     # Tag it with the version that is corresponding to the softethervpn server.
-    image: dmitrivlk/softethervpn:4.44-9807-rtm
+    image: dvlk/softethervpn:4.44-9807-rtm
     #environment:
     # USERS directive not working. Probably due to a high stack of commands. To be reviewed.
     #  - USERNAME=user1
