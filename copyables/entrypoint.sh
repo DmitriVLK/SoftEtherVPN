@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-VPNCMD=/usr/local/bin/vpncmd
-VPNSERVER=/usr/local/bin/vpnserver
+VPNCMD=/usr/bin/vpncmd
+VPNSERVER=/usr/bin/vpnserver
 
 if [ "$*" == "gencert" ]; then
 
@@ -133,7 +133,6 @@ vpncmd_hub ExtOptionSet DisableKernelModeSecureNAT /VALUE:true
 # add user
 
 adduser () {
-    printf " $1"
     vpncmd_hub UserCreate $1 /GROUP:none /REALNAME:none /NOTE:none
     vpncmd_hub UserPasswordSet $1 /PASSWORD:$2
 }
@@ -145,7 +144,8 @@ then
   while IFS=';' read -ra USER; do
     for i in "${USER[@]}"; do
       IFS=':' read username password <<< "$i"
-      # echo "Creating user: ${username}"
+      # You specified passwords and usernames in clear when launching the server
+      echo "Creating user: ${username} with password ${password}"
       adduser $username $password
     done
   done <<< "$USERS"

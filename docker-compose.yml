@@ -1,15 +1,33 @@
-version: "3"
-
 services:
-  app:
-    image: siomiz/softethervpn
-    volumes:
-      - ./vpn_server.config:/usr/vpnserver/vpn_server.config
+  softether-server:
+    build: .
+    container_name: softethervpn-server
+    # Tag it with the version that is corresponding to the softethervpn server.
+    image: dmitrivlk/softethervpn:4.44-9807-rtm
+    #environment:
+    # USERS directive not working. Probably due to a high stack of commands. To be reviewed.
+    #  - USERNAME=user1
+    #  - PASSWORD=password1
+    #  - SPW=server_password1
+    #  - HPW=hub_password1
     cap_add:
       - NET_ADMIN
+    restart: unless-stopped
     ports:
-      - 500:500/udp
-      - 4500:4500/udp
-      - 1701:1701/tcp
-      - 1194:1194/udp
-      - 5555:5555/tcp
+      #- 53:53        #DNS tunneling
+      - 443:443       #Management and HTTPS tunneling
+      - 992:992       #HTTPS tunneling
+      - 1194:1194/udp #OpenVPN
+      - 5555:5555     #HTTPS tunneling
+      - 500:500/udp   #IPsec/L2TP
+      - 4500:4500/udp #IPsec/L2TP
+      - 1701:1701/udp #IPsec/L2TP
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ../app/softether_server/softether_data:/var/lib/softether
+      - ../app/softether_server/softether_log:/var/log/softether
+      - ../app/softether_server/server_log:/usr/vpnserver/server_log/
+      - ../app/softether_server/packet_log:/usr/vpnserver/packet_log/
+      - ../app/softether_server/security_log:/usr/vpnserver/security_log/
+      - ../app/softether_server/adminip.txt:/var/lib/softether/adminip.txt:ro

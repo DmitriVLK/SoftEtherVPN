@@ -9,12 +9,9 @@
 
 ## Image Tags
 
-Base OS Image | Latest Bata ([v4.43-9799-beta](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.43-9799-beta)) | Latest Stable ([v4.42-9798-rtm](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.42-9798-rtm)) |
-------------- | -- | --
-`alpine:3.16` | **`:latest`**, `:alpine`, `:9799`, `:4.43`, `:9799-alpine`, `:4.43-alpine` | `:9798-alpine`, `:4.42-alpine`
-`debian:11-slim` | `:debian`, `:9799-debian`, `:4.43-debian` | `:9798-debian`, `:4.42-debian`
-`ubuntu:22.04` | `:ubuntu`, `:9799-ubuntu`, `:4.43-ubuntu` | `:9798-ubuntu`, `:4.42-ubuntu`
-`opensuse/tumbleweed` | `:opensuse`, `:9799-opensuse`, `:4.43-opensuse` | `:9798-opensuse`, `:4.42-opensuse`
+Latest Stable: [v4.44-9807-rtm](https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/tree/v4.44-9807-rtm)
+
+Base OS Image: `debian:12-slim`
 
 ## Setup
  - L2TP/IPSec PSK + OpenVPN
@@ -22,9 +19,7 @@ Base OS Image | Latest Bata ([v4.43-9799-beta](https://github.com/SoftEtherVPN/S
  - Perfect Forward Secrecy (DHE-RSA-AES256-SHA)
  - make'd from [the official SoftEther VPN GitHub Stable Edition Repository][2].
 
-`docker run -d --cap-add NET_ADMIN -p 500:500/udp -p 4500:4500/udp -p 1701:1701/tcp -p 1194:1194/udp -p 5555:5555/tcp siomiz/softethervpn`
-
-Connectivity tested on Android + iOS devices. It seems Android devices do not require L2TP server to have port 1701/tcp open.
+Connectivity tested on iOS devices (SSTP) + Ubiquity UDM VPN client (openVPN).
 
 The above example will accept connections from both L2TP/IPSec and OpenVPN clients at the same time.
 
@@ -41,12 +36,14 @@ Any protocol supported by SoftEther VPN server is accepted at any open/published
 
 All optional:
 
+- `-e USERNAME`: username that can be automatically generated.
+- `-e PASSWORD`: password corresponding to the username.
 - `-e PSK`: Pre-Shared Key (PSK), if not set: "notasecret" (without quotes) by default.
-- `-e USERS`: Multiple usernames and passwords may be set with the following pattern: `username:password;user2:pass2;user3:pass3`. Username and passwords are separated by `:`. Each pair of `username:password` should be separated by `;`. If not set a single user account with a random username ("user[nnnn]") and a random weak password is created.
 - `-e SPW`: Server management password. :warning:
 - `-e HPW`: "DEFAULT" hub management password. :warning:
 
-Single-user mode (usage of `-e USERNAME` and `-e PASSWORD`) is still supported.
+Not working and to be rechecked the USERS environment parameter. Probably due to a high stack of commands. To be reviewed. Basic working principle:
+- `-e USERS`: Multiple usernames and passwords may be set with the following pattern: `username:password;user2:pass2;user3:pass3`. Username and passwords are separated by `:`. Each pair of `username:password` should be separated by `;`. If not set a single user account with a random username ("user[nnnn]") and a random weak password is created.
 
 See the docker log for username and password (unless `-e USERS` is set), which *would look like*:
 

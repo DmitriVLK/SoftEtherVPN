@@ -1,60 +1,63 @@
-FROM alpine:3.20 AS prep
+FROM alpine AS prep
 
-LABEL maintainer="Tomohisa Kusano <siomiz@gmail.com>" \
+LABEL maintainer="DmitriVLK" \
       contributors="See CONTRIBUTORS file <https://github.com/siomiz/SoftEtherVPN/blob/master/CONTRIBUTORS>"
 
-ENV BUILD_VERSION=5.02.5185 \
-    GIT_VERIFY_PUBKEY=B5690EEEBB952194
+ENV BUILD_VERSION=4.44-9807-rtm \
+    SHA256_SUM=8CCD8959A674BD4B34F9FC5DD9EB60FE0226B0ADC0F6F852A07011DCC769ED97
 
-WORKDIR /usr/local/src/SoftEtherVPN
+RUN wget https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/archive/v${BUILD_VERSION}.tar.gz \
+    && echo "${SHA256_SUM}  v${BUILD_VERSION}.tar.gz" | sha256sum -c \
+    && mkdir -p /usr/local/src \
+    && tar -x -C /usr/local/src/ -f v${BUILD_VERSION}.tar.gz \
+    && rm v${BUILD_VERSION}.tar.gz
 
-# RUN wget https://github.com/SoftEtherVPN/SoftEtherVPN/archive/refs/tags/${BUILD_VERSION}.tar.gz \
-#     && echo "${SHA256_SUM}  ${BUILD_VERSION}.tar.gz" | sha256sum -c \
-#     && mkdir -p /usr/local/src \
-#     && tar -x -C /usr/local/src/ -f ${BUILD_VERSION}.tar.gz \
-#     && rm ${BUILD_VERSION}.tar.gz
-
-RUN apk add -U git gnupg \
-    && git clone https://github.com/SoftEtherVPN/SoftEtherVPN.git --depth 1 --single-branch --branch=${BUILD_VERSION} . \
-    && gpg --receive-keys ${GIT_VERIFY_PUBKEY} \
-    && git verify-commit ${BUILD_VERSION} \
-    && git submodule init \
-    && git submodule update --recommend-shallow
-
-FROM alpine:3.20 AS build
+FROM debian:12 AS build
 
 COPY --from=prep /usr/local/src /usr/local/src
 
-ENV LANG=en_US.UTF-8 \
-    USE_MUSL=YES
-
-RUN apk add -U build-base cmake libsodium-dev ncurses-dev openssl-dev readline-dev zip zlib-dev \
-    && cd /usr/local/src/SoftEtherVPN \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    build-essential \
+    libncurses6 \
+    libncurses-dev \
+    libreadline8 \
+    libreadline-dev \
+    libssl3 \
+    libssl-dev \
+    wget \
+    zlib1g \
+    zlib1g-dev \
+    zip \
+    && cd /usr/local/src/SoftEtherVPN_Stable-* \
     && ./configure \
-    && make -C build \
-    && make -C build install \
-    && zip -r9 /artifacts.zip \
-       /usr/local/bin/vpn* /usr/local/libexec/softether/* \
-       /usr/local/lib/libcedar.so /usr/local/lib/libmayaqua.so \
-       /usr/lib/libsodium.so* \
-       /usr/local/bin/list_cpu_features
+    && make \
+    && make install \
+    && touch /usr/vpnserver/vpn_server.config \
+    && zip -r9 /artifacts.zip /usr/vpn* /usr/bin/vpn*
 
-FROM alpine:3.20
+FROM debian:12-slim
 
 COPY --from=build /artifacts.zip /
 
 COPY copyables /
 
-ENV LANG=en_US.UTF-8
-
-RUN apk add -U --no-cache bash iptables openssl-dev \
-    && chmod +x /entrypoint.sh /gencert.sh \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    libncurses6 \
+    libreadline8 \
+    libssl3 \
+    iptables \
+    unzip \
+    zlib1g \
     && unzip -o /artifacts.zip -d / \
+    && rm -rf /var/lib/apt/lists/* \
+    && chmod +x /entrypoint.sh /gencert.sh \
     && rm /artifacts.zip \
     && rm -rf /opt \
     && ln -s /usr/vpnserver /opt \
-    && find /usr/local/bin/vpn* -type f ! -name vpnserver \
-       -exec sh -c 'ln -s {} /opt/$(basename {})' \;
+    && find /usr/bin/vpn* -type f ! -name vpnserver \
+       -exec bash -c 'ln -s {} /opt/$(basename {})' \;
 
 WORKDIR /usr/vpnserver/
 
@@ -64,4 +67,4 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 500/udp 4500/udp 1701/tcp 1194/udp 5555/tcp 443/tcp
 
-CMD ["/usr/local/bin/vpnserver", "execsvc"]
+CMD ["/usr/bin/vpnserver", "execsvc"]
